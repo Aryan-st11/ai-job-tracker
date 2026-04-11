@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import {
   DragDropContext,
   Droppable,
@@ -27,14 +28,14 @@ export default function Dashboard() {
     fetchApps();
   }, []);
 
-  // 🚀 FIXED DRAG LOGIC
+  // 🔥 DRAG FIXED
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
 
     const { draggableId, destination } = result;
     const newStatus = destination.droppableId;
 
-    // 🔥 optimistic update (instant UI)
+    // ✅ optimistic update
     const updatedApps = apps.map((app) =>
       String(app._id) === draggableId
         ? { ...app, status: newStatus }
@@ -49,26 +50,27 @@ export default function Dashboard() {
       });
     } catch (err) {
       console.error("Drag update failed", err);
-      fetchApps(); // rollback
+      fetchApps();
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
-
       <Navbar onAdd={() => setIsModalOpen(true)} />
 
       <div className="p-6">
 
+        {/* HEADER */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800">
             Job Tracker Dashboard
           </h1>
           <p className="text-gray-500">
-            Track your applications like a pro 
+            Track your applications like a pro
           </p>
         </div>
 
+        {/* SEARCH */}
         <input
           placeholder="Search company or role..."
           className="w-full p-3 mb-4 rounded-xl border focus:ring-2 focus:ring-blue-400"
@@ -116,7 +118,7 @@ export default function Dashboard() {
                       </div>
 
                       {/* CARDS */}
-                      <div className="space-y-3 overflow-y-auto pr-1 min-h-[100px]">
+                      <div className="space-y-3 overflow-y-auto overflow-x-visible pr-1 min-h-[100px]">
 
                         {filteredApps.length === 0 && (
                           <div className="text-center mt-10">
@@ -138,45 +140,53 @@ export default function Dashboard() {
                           return (
                             <Draggable
                               key={app._id}
-                              draggableId={String(app._id)} // 🔥 FIX
+                              draggableId={String(app._id)}
                               index={index}
                             >
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                  }}
-                                  className={`p-4 rounded-2xl border bg-white transition-all cursor-grab
-                                  ${
-                                    snapshot.isDragging
-                                      ? "shadow-2xl scale-105 rotate-1"
-                                      : "shadow hover:shadow-lg hover:-translate-y-1"
-                                  }`}
-                                >
-                                  <h3 className="font-semibold text-gray-900 text-lg">
-                                    {app.company}
-                                  </h3>
+                              {(provided, snapshot) => {
+                                const card = (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      zIndex: snapshot.isDragging ? 9999 : "auto",
+                                    }}
+                                    className={`p-4 rounded-2xl border bg-white transition-all cursor-grab
+                                    ${
+                                      snapshot.isDragging
+                                        ? "shadow-2xl scale-105 rotate-1"
+                                        : "shadow hover:shadow-lg hover:-translate-y-1"
+                                    }`}
+                                  >
+                                    <h3 className="font-semibold text-gray-900 text-lg">
+                                      {app.company}
+                                    </h3>
 
-                                  <p className="text-sm text-gray-500 italic">
-                                    {app.role}
-                                  </p>
+                                    <p className="text-sm text-gray-500 italic">
+                                      {app.role}
+                                    </p>
 
-                                  <div className="mt-3 flex justify-between items-center">
-                                    <span
-                                      className={`text-xs px-2 py-1 rounded-full ${statusColors[app.status]}`}
-                                    >
-                                      {app.status}
-                                    </span>
+                                    <div className="mt-3 flex justify-between items-center">
+                                      <span
+                                        className={`text-xs px-2 py-1 rounded-full ${statusColors[app.status]}`}
+                                      >
+                                        {app.status}
+                                      </span>
 
-                                    <span className="text-xs text-gray-400">
-                                      • just now
-                                    </span>
+                                      <span className="text-xs text-gray-400">
+                                        • just now
+                                      </span>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                );
+
+                                // 🚀 FLOATING EFFECT FIX
+                                return snapshot.isDragging
+                                  ? ReactDOM.createPortal(card, document.body)
+                                  : card;
+                              }}
                             </Draggable>
                           );
                         })}

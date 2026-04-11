@@ -1,13 +1,11 @@
 import { useState } from "react";
 import API from "../api/axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate(); // ✅ ADD THIS
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -35,8 +33,8 @@ export default function Login() {
       // ✅ Save token
       localStorage.setItem("token", token);
 
-      // 🚀 FIXED NAVIGATION
-      navigate("/"); // ✅ correct route
+      // 🚀 FORCE FULL RELOAD (fixes auth sync issue)
+      window.location.href = "/";
 
     } catch (err: any) {
       console.error(err);
