@@ -15,7 +15,7 @@ router.get("/", (req, res) => {
   });
 });
 
-// ✅ AI Parse Route (PRO VERSION)
+// ✅ AI Parse Route (DEPLOYMENT SAFE)
 router.post("/parse", async (req, res) => {
   try {
     const { text, userSkills = [] } = req.body;
@@ -27,16 +27,13 @@ router.post("/parse", async (req, res) => {
       });
     }
 
-    // 🧠 STEP 1: Parse JD
+    const lower = text.toLowerCase();
+
     let parsed;
 
-    try {
-      parsed = await parseJobDescription(text);
-    } catch (err) {
-      console.log("⚠️ AI parse failed, using fallback...");
-      
-      // 🔥 FALLBACK (DEMO SAFE)
-      const lower = text.toLowerCase();
+    // 🔥 STEP 1: Check OpenAI key
+    if (!process.env.OPENAI_API_KEY) {
+      console.log("⚠️ No OpenAI key → using FULL fallback");
 
       parsed = {
         company: lower.includes("google")
@@ -53,37 +50,54 @@ router.post("/parse", async (req, res) => {
 
         requiredSkills: ["React", "Node.js", "MongoDB"],
         niceToHaveSkills: ["AWS", "Docker"],
-
-        seniority: lower.includes("senior")
-          ? "Senior"
-          : lower.includes("intern")
-          ? "Intern"
-          : "Mid-Level",
-
-        location: lower.includes("bangalore")
-          ? "Bangalore"
-          : "Remote",
-
-        summary: "Auto-generated fallback summary",
+        seniority: "Mid-Level",
+        location: "Remote",
+        summary: "Fallback AI response (no API key)",
       };
+    } else {
+      // 🔥 STEP 2: Try real AI
+      try {
+        parsed = await parseJobDescription(text);
+      } catch (err) {
+        console.log("⚠️ AI parse failed → fallback");
+
+        parsed = {
+          company: "Unknown Company",
+          role: "Software Engineer",
+          requiredSkills: ["React", "Node.js"],
+          niceToHaveSkills: ["AWS"],
+          seniority: "Mid-Level",
+          location: "Remote",
+          summary: "Fallback due to AI failure",
+        };
+      }
     }
 
-    // 🧠 STEP 2: Safe defaults
+    // 🧠 STEP 3: Safe defaults
     const requiredSkills = parsed.requiredSkills || [];
 
-    // 🧠 STEP 3: Generate resume bullets
+    // 🧠 STEP 4: Resume bullets
     let bullets: string[] = [];
-    try {
-      bullets = await generateBullets(parsed.role);
-    } catch {
+
+    if (!process.env.OPENAI_API_KEY) {
       bullets = [
-        "Built scalable web applications",
-        "Improved system performance",
-        "Collaborated with cross-functional teams",
+        "Developed scalable web applications using modern frameworks",
+        "Optimized performance and improved system efficiency",
+        "Collaborated with teams to deliver production-ready features",
       ];
+    } else {
+      try {
+        bullets = await generateBullets(parsed.role);
+      } catch {
+        bullets = [
+          "Built scalable features",
+          "Improved performance",
+          "Worked with cross-functional teams",
+        ];
+      }
     }
 
-    // 🧠 STEP 4: Match scoring
+    // 🧠 STEP 5: Match score
     const match = matchScore(userSkills, requiredSkills);
 
     // 🎯 FINAL RESPONSE
@@ -95,7 +109,6 @@ router.post("/parse", async (req, res) => {
       seniority: parsed.seniority,
       location: parsed.location,
       summary: parsed.summary,
-
       resumeSuggestions: bullets,
       ...match,
     });
