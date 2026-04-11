@@ -1,13 +1,11 @@
 import { useState } from "react";
 import API from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -35,8 +33,8 @@ export default function Login() {
       // ✅ Save token
       localStorage.setItem("token", token);
 
-      // ✅ Navigate properly (FIXED)
-      navigate("/");
+      // 🚀 FORCE FULL RELOAD (fixes auth state issue)
+      window.location.href = "/dashboard";
 
     } catch (err: any) {
       console.error(err);
@@ -78,9 +76,9 @@ export default function Login() {
 
         <p className="mt-3 text-sm text-center">
           New user?{" "}
-          <a href="/register" className="text-blue-600 hover:underline">
+          <Link to="/register" className="text-blue-600 hover:underline">
             Register
-          </a>
+          </Link>
         </p>
 
       </div>
