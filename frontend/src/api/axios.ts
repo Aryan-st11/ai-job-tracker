@@ -1,9 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:3001", // ✅ safer than localhost
+  baseURL: "https://ai-job-tracker-kglj.onrender.com",
 });
-
 // 🔐 Attach token automatically
 API.interceptors.request.use(
   (config) => {
